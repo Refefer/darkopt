@@ -1,0 +1,13 @@
+[package]
+name = "darkopt"
+version = "0.1.0"
+authors = ["Andrew Stanton <astanton@etsy.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.7.3"
+rayon = "1.0.3"
+float-ord = "0.2.0"
+rand_distr = "0.2.0"
