@@ -7,7 +7,8 @@ pub trait Fitness: Send + Sync {
 }
 
 pub trait Optimizer: Clone + std::fmt::Debug + Send + Sync {
-   fn fit<F: Fitness, FN: FnMut(f32, usize) -> ()>(
+    type Stats;
+    fn fit<F: Fitness, FN: FnMut(Self::Stats, usize) -> ()>(
         &self,
         fit_fn: &F, 
         total_fns: usize,

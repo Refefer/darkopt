@@ -14,3 +14,15 @@ impl Fitness for MatyasEnv {
 
 }
 
+pub struct RastriginEnv { pub dims: usize }
+
+impl Fitness for RastriginEnv {
+    fn score(&self, candidate: &[f32]) -> f32 {
+        let f: f32 = 10. * (self.dims as f32) + 
+            candidate.iter().map(|xi| {
+                (*xi).powf(2.) - 10. * (2. * std::f32::consts::PI * (*xi)).cos()
+            }).sum::<f32>();
+        -f
+    }
+
+}

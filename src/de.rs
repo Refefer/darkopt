@@ -294,6 +294,7 @@ impl <D: Distribution<f64> + Sync + Clone> DePlus<D> {
 
 impl <D: Distribution<f64> + Sync + Send + Clone + std::fmt::Debug> Optimizer for DePlus<D> {
 
+    type Stats = f32;
     fn fit<F: Fitness, FN: FnMut(f32, usize) -> ()>(
         &self, 
         fit_fn: &F, 
@@ -334,7 +335,7 @@ fn l2norm(v: &[f32]) -> f32 {
 mod test_de {
     use super::*;
     use rand_distr::StandardNormal;
-    use crate::exp::MatyasEnv;
+    use crate::exp::*;
 
     #[test]
     fn test_matyas() {
@@ -356,4 +357,6 @@ mod test_de {
         assert_eq!(results[0], 10.);
         assert_eq!(results[1], -10.);
     }
+    
+
 }

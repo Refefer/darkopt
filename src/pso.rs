@@ -79,7 +79,11 @@ pub struct PSO {
     c_1: f32,
 
     /// Local bias coefficient
-    c_2: f32
+    c_2: f32,
+
+    /// The min value for X
+    x_range: Option<(f32, f32)>
+
 }
 
 impl PSO {
@@ -95,6 +99,7 @@ impl PSO {
 }
 
 impl Optimizer for PSO {
+    type Stats = f32;
 
     fn fit<F: Fitness, FN: FnMut(f32, usize) -> ()>(
         &self,
@@ -106,22 +111,34 @@ impl Optimizer for PSO {
     ) -> (f32, Vec<f32>) {
 
         let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
-        let dist = Normal::new(0., 1.).unwrap();
+        let dist = match self.x_range {
+            None => Uniform::new(-1., 1.),
+            Some((x_min, x_max)) => Uniform::new(x_min, x_max)
+        };
+
         // Initialize swarm
         let mut swarm: Vec<_> = (0..self.swarm_size).map(|i| {
             let mut p = Particle::new(self.dims, &mut rng, &dist);
-            if i == 0 && x_in.is_some() {
-                if let Some(v) = x_in {
+            // If we have an initial offset, set the best to the best score
+            // and offset the rest of the population by x_in
+            if let Some(v) = x_in {
+                if i == 0 {
                     p.position.copy_from_slice(&v);
-               }
+                } else {
+                    p.position.iter_mut().zip(v.iter()).for_each(|(pi, vi)| {
+                        *pi += vi;
+                    });
+                }
             }
 
+            // Get the fitness for the initial position
             p.evaluate(fit_fn);
             p
         }).collect();
 
         let mut fn_count = self.swarm_size;
 
+        // Generate an rng per swarm.  This guarantees reproducibility
         let mut rngs = (&mut rng)
             .sample_iter(Uniform::new(0, std::u64::MAX))
             .take(self.swarm_size)
@@ -151,23 +168,25 @@ impl Optimizer for PSO {
 #[cfg(test)]
 mod test_pso {
     use super::*;
-    use crate::exp::MatyasEnv;
+    use crate::exp::*;
 
     #[test]
     fn test_matyas() {
-        let de = PSO {
+        let opt = PSO {
             dims: 2,
             swarm_size: 30,
             w: 0.8,
             c_1: 0.5,
-            c_2: 1.
+            c_2: 1.,
+            x_range: None
         };
 
         let fit_fn = MatyasEnv(-10., 10.);
-        let (fit, results) = de.fit(&fit_fn, 10000, 2020, None, 
+        let (fit, results) = opt.fit(&fit_fn, 10000, 2020, None, 
                                     |_best_fit, _fns_remaining| {});
         assert_eq!(fit, 0.);
         assert_eq!(results[0], 10.);
         assert_eq!(results[1], -10.);
     }
+
 }
