@@ -2,7 +2,7 @@ pub mod de;
 pub mod pso;
 pub mod exp;
 
-//pub mod ga;
+pub mod ga;
 
 pub trait Fitness: Send + Sync {
     type Data;
