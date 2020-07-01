@@ -2,20 +2,25 @@ pub mod de;
 pub mod pso;
 pub mod exp;
 
+//pub mod ga;
+
 pub trait Fitness: Send + Sync {
-    fn score(&self, candidate: &[f32]) -> f32;
+    type Data;
+    fn score(&self, candidate: &Self::Data) -> f32;
 }
 
 pub trait Optimizer: Clone + std::fmt::Debug + Send + Sync {
     type Stats;
-    fn fit<F: Fitness, FN: FnMut(Self::Stats, usize) -> ()>(
+    type Data: Clone + Send + Sync;
+
+    fn fit<F: Fitness<Data=Self::Data>, FN: FnMut(Self::Stats, usize) -> ()>(
         &self,
         fit_fn: &F, 
         total_fns: usize,
         seed: u64,
-        x_in: Option<&[f32]>,
+        x_in: Option<&Self::Data>,
         callback: FN
-    ) -> (f32, Vec<f32>);
+    ) -> (f32, Self::Data);
 }
 
 #[cfg(test)]

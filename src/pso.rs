@@ -5,7 +5,7 @@ extern crate float_ord;
 use float_ord::FloatOrd;
 
 use rand::prelude::*;
-use rand_distr::{Distribution,Normal,Uniform};
+use rand_distr::{Distribution,Uniform};
 use rayon::prelude::*;
 
 use crate::{Fitness,Optimizer};
@@ -30,7 +30,7 @@ impl Particle {
         }
     }
 
-    fn evaluate<F: Fitness>(&mut self, f: &F) -> f32 {
+    fn evaluate<F: Fitness<Data=Vec<f32>>>(&mut self, f: &F) -> f32 {
         self.fitness = f.score(&self.position);
         if self.fitness > self.best_fitness {
             self.best_seen.copy_from_slice(&self.position);
@@ -69,6 +69,7 @@ impl Particle {
 pub struct PSO {
     /// Number of dimensions in the genome
     dims: usize,
+
     /// Number of particles in the swarm
     swarm_size: usize,
 
@@ -100,13 +101,14 @@ impl PSO {
 
 impl Optimizer for PSO {
     type Stats = f32;
+    type Data = Vec<f32>;
 
-    fn fit<F: Fitness, FN: FnMut(f32, usize) -> ()>(
+    fn fit<F: Fitness<Data=Self::Data>, FN: FnMut(f32, usize) -> ()>(
         &self,
         fit_fn: &F,
         total_fns: usize,
         seed: u64,
-        x_in: Option<&[f32]>,
+        x_in: Option<&Vec<f32>>,
         mut callback: FN
     ) -> (f32, Vec<f32>) {
 

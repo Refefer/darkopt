@@ -50,39 +50,12 @@ pub struct DePlus<D> {
 
 impl <D: Distribution<f64> + Sync + Clone> DePlus<D> {
 
-    pub fn fits<F: Fitness, FN: FnMut(f32, usize) -> ()>(
+    fn run_pass<F: Fitness<Data=Vec<f32>>, FN: FnMut(f32, usize) -> ()>(
         &self, 
         fit_fn: &F, 
         total_fns: usize, 
         seed: u64, 
-        x_in: Option<&[f32]>,
-        mut callback: FN
-    ) -> (f32, Vec<f32>) {
-
-        let mut fits = 0;
-        let mut best_fit = std::f32::NEG_INFINITY;
-        let mut best_cand = vec![0.; self.dims];
-        while fits < total_fns {
-            let (fn_rem, fit, cand) = self.run_pass(fit_fn, total_fns, 
-                          seed + fits as u64, x_in, 
-                          &mut callback);
-
-            fits += fn_rem;
-            if fit > best_fit {
-                best_fit = fit;
-                best_cand = cand;
-            }
-        }
-
-        (best_fit, best_cand)
-    }
-
-    fn run_pass<F: Fitness, FN: FnMut(f32, usize) -> ()>(
-        &self, 
-        fit_fn: &F, 
-        total_fns: usize, 
-        seed: u64, 
-        x_in: Option<&[f32]>,
+        x_in: Option<&Vec<f32>>,
         callback: &mut FN
     ) -> (usize, f32, Vec<f32>) {
 
@@ -295,12 +268,14 @@ impl <D: Distribution<f64> + Sync + Clone> DePlus<D> {
 impl <D: Distribution<f64> + Sync + Send + Clone + std::fmt::Debug> Optimizer for DePlus<D> {
 
     type Stats = f32;
-    fn fit<F: Fitness, FN: FnMut(f32, usize) -> ()>(
+    type Data = Vec<f32>;
+
+    fn fit<F: Fitness<Data=Self::Data>, FN: FnMut(f32, usize) -> ()>(
         &self, 
         fit_fn: &F, 
         total_fns: usize, 
         seed: u64, 
-        x_in: Option<&[f32]>,
+        x_in: Option<&Vec<f32>>,
         mut callback: FN
     ) -> (f32, Vec<f32>) {
 
